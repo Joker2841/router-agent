@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+.venv/
+.git/
+.gitignore
+out.json
+out_*.json
+_local_out/
+sample_output.json
+eval.py
+eval_set.json
+eval_tasks.json
+slides.html
+*.md
+.env
+# Ship ONLY the active model.gguf, not the spare 1B/4B download files.
+# This keeps the build context and image small.
+models/*.gguf
+!models/model.gguf
+models/*.tmp
+models/*.part

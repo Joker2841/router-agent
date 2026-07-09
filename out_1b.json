@@ -1,0 +1,34 @@
+[
+  {
+    "task_id": "practice-01",
+    "answer": "Canberra is the capital of Australia, and it’s located near Lake Burley Griffin."
+  },
+  {
+    "task_id": "practice-02",
+    "answer": "36.0\n300\n300"
+  },
+  {
+    "task_id": "practice-03",
+    "answer": "Mixed – While the battery life is positive, the screen’s fragility is a significant drawback."
+  },
+  {
+    "task_id": "practice-04",
+    "answer": "The new downtown library opened last week, providing free workshops, a makerspace, and extended evening hours for students."
+  },
+  {
+    "task_id": "practice-05",
+    "answer": "Maria Sanchez - Person\nFireworks AI - Organization\nBerlin - Location\nMarch - Date"
+  },
+  {
+    "task_id": "practice-06",
+    "answer": "```python\ndef get_max(nums):\n  return max(nums)\n```"
+  },
+  {
+    "task_id": "practice-07",
+    "answer": "Jo"
+  },
+  {
+    "task_id": "practice-08",
+    "answer": "```python\ndef find_second_largest(numbers):\n    \"\"\"\n    Finds the second largest number in a list.\n\n    Args:\n        numbers: A list of numbers.\n\n    Returns:\n        The second largest number in the list, or None if the list has fewer than 2 elements.\n    \"\"\"\n    if len(numbers) < 2:\n        return None\n\n    largest = float('-inf')\n    second_largest = float('-inf')\n\n    for num in numbers:\n        if num > largest:\n            second_largest = largest\n            largest = num\n        elif num > second_largest and num != largest:\n            second_largest = num\n\n    if second_largest == float('-inf'):\n        return None  # Handle the case where all numbers are the same\n\n    return second_largest\n```"
+  }
+]

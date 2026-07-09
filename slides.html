@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zero-Token Routing Agent</title>
+<style>
+  :root { --ink:#12141a; --muted:#5b6472; --accent:#e0301e; --bg:#ffffff; --card:#f5f6f8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: var(--ink); background: #e9ebee; }
+  .slide {
+    width: 1280px; height: 720px; background: var(--bg); margin: 24px auto;
+    padding: 72px 88px; position: relative; display: flex; flex-direction: column;
+    justify-content: center; page-break-after: always; overflow: hidden;
+  }
+  .kicker { color: var(--accent); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 18px; margin-bottom: 18px; }
+  h1 { font-size: 72px; line-height: 1.05; letter-spacing: -.02em; }
+  h2 { font-size: 46px; line-height: 1.1; letter-spacing: -.01em; margin-bottom: 30px; }
+  p.lead { font-size: 28px; color: var(--muted); margin-top: 22px; max-width: 62ch; line-height: 1.4; }
+  ul { list-style: none; display: flex; flex-direction: column; gap: 18px; }
+  li { font-size: 27px; line-height: 1.35; padding-left: 40px; position: relative; }
+  li:before { content: ""; position: absolute; left: 0; top: 14px; width: 16px; height: 16px; background: var(--accent); border-radius: 4px; }
+  .row { display: flex; gap: 24px; margin-top: 20px; }
+  .card { background: var(--card); border-radius: 16px; padding: 30px 34px; flex: 1; }
+  .card h3 { font-size: 24px; margin-bottom: 10px; }
+  .card p { font-size: 21px; color: var(--muted); line-height: 1.35; }
+  .stat { font-size: 88px; font-weight: 800; letter-spacing: -.02em; color: var(--accent); }
+  .stat small { display: block; font-size: 24px; color: var(--muted); font-weight: 500; letter-spacing: 0; margin-top: 6px; }
+  .stats { display: flex; gap: 60px; margin-top: 20px; }
+  .foot { position: absolute; bottom: 40px; left: 88px; right: 88px; display: flex; justify-content: space-between; color: var(--muted); font-size: 18px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 26px; }
+  .tag { background: var(--card); border-radius: 999px; padding: 12px 22px; font-size: 22px; }
+  @media print { body { background: #fff; } .slide { margin: 0; box-shadow: none; } }
+</style>
+</head>
+<body>
+
+  <section class="slide">
+    <div class="kicker">AMD Developer Hackathon ACT II, Track 1</div>
+    <h1>Zero-Token Routing Agent</h1>
+    <p class="lead">A local-first agent that answers tasks for free and clears the accuracy gate without spending Fireworks tokens.</p>
+    <div class="foot"><span>Hybrid Token-Efficient Routing Agent</span><span>Built with Gemma on AMD</span></div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">The problem</div>
+    <h2>Enterprises want lower AI cost without losing quality</h2>
+    <p class="lead">Track 1 scores agents on how few Fireworks tokens they spend, as long as they stay above an 80 percent accuracy gate. Local inference counts as zero tokens, so the ideal agent answers everything it can on its own and pays for a premium model only when it truly has to.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Our approach</div>
+    <h2>Answer locally, prove the answer, escalate only if forced</h2>
+    <ul>
+      <li>A small Gemma model runs inside the container on CPU, so its answers cost zero tokens.</li>
+      <li>Lightweight rules classify each task and route it to the right handler.</li>
+      <li>Math is turned into a short Python program that we run and verify, so the answer is computed, not guessed.</li>
+      <li>Generated code is compiled to confirm it works before we return it.</li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">How it works</div>
+    <h2>One pipeline across eight task categories</h2>
+    <div class="row">
+      <div class="card"><h3>Verified locally</h3><p>Math and logic through reasoning and execution. Code generation and debugging with a compile check.</p></div>
+      <div class="card"><h3>Answered locally</h3><p>Sentiment, summarization, named entity recognition, and factual questions handled directly by Gemma.</p></div>
+      <div class="card"><h3>Escalation</h3><p>A Fireworks call only when no local answer is produced. In practice this is rarely needed.</p></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Results</div>
+    <h2>High accuracy at zero tokens</h2>
+    <div class="stats">
+      <div class="stat">95%<small>accuracy on our 20 task benchmark</small></div>
+      <div class="stat">0<small>Fireworks tokens spent</small></div>
+      <div class="stat">2.5 GB<small>image, well under the 10 GB limit</small></div>
+    </div>
+    <p class="lead">The agent runs inside the judged environment of 4 GB of RAM and 2 vCPUs, and finishes well within the time limit.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Technology</div>
+    <h2>Built with Gemma on AMD</h2>
+    <div class="tags">
+      <span class="tag">Gemma 3 (4B, GGUF)</span>
+      <span class="tag">llama.cpp on CPU</span>
+      <span class="tag">Python</span>
+      <span class="tag">Docker, linux/amd64</span>
+      <span class="tag">Fireworks AI API</span>
+      <span class="tag">AMD Developer Cloud</span>
+      <span class="tag">AMD ROCm</span>
+    </div>
+    <p class="lead">Developed and tested on AMD Developer Cloud, and packaged to run on the AMD judged environment.</p>
+  </section>
+
+</body>
+</html>

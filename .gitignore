@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+out.json
+_local_out/
+# Do NOT commit model weights — they ship in the Docker image, not git.
+models/*.gguf
+models/*.tmp
+models/*.part

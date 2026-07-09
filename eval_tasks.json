@@ -1,0 +1,22 @@
+[
+  {"task_id": "f1", "prompt": "What is the chemical symbol for gold, and what is its atomic number?"},
+  {"task_id": "f2", "prompt": "At sea level, what is the boiling point of water in degrees Celsius?"},
+  {"task_id": "f3", "prompt": "Who wrote the play Romeo and Juliet?"},
+  {"task_id": "m1", "prompt": "A train travels 60 km in 45 minutes. What is its average speed in km/h?"},
+  {"task_id": "m2", "prompt": "A shirt costs $40. It is discounted by 25%, then a further 10% is taken off the reduced price. What is the final price in dollars?"},
+  {"task_id": "m3", "prompt": "What is 15% of 340?"},
+  {"task_id": "s1", "prompt": "Classify the sentiment: 'I waited an hour and the food arrived cold. Never coming back.'"},
+  {"task_id": "s2", "prompt": "Classify the sentiment: 'The concert was absolutely incredible, the best night of my life!'"},
+  {"task_id": "sum1", "prompt": "Summarize in one sentence: The city council voted on Tuesday to approve a new bike-lane network spanning 30 miles, funded by a federal grant, with construction starting next spring."},
+  {"task_id": "sum2", "prompt": "Summarize in exactly one sentence: Researchers found that a compound in green tea may slow the growth of certain bacteria, though human trials are still needed."},
+  {"task_id": "n1", "prompt": "Extract all named entities and their types: Tim Cook announced the new iPhone at Apple Park in Cupertino on September 12."},
+  {"task_id": "n2", "prompt": "Extract all named entities and their types: The United Nations met in Geneva last Thursday to discuss the treaty."},
+  {"task_id": "d1", "prompt": "This function should reverse a string but has a bug: def rev(s): return s. Find and fix it."},
+  {"task_id": "d2", "prompt": "This should return the average of a list but has a bug: def avg(x): return sum(x)*len(x). Find and fix it."},
+  {"task_id": "l1", "prompt": "Anna, Ben, and Cara sit in a row of three seats. Anna is not in the middle. Cara is not on the right end. Ben is to the left of Cara. Who is in the middle seat?"},
+  {"task_id": "l2", "prompt": "Three boxes are labeled A, B, and C. Exactly one contains a prize. Label A says 'the prize is here'. Label B says 'the prize is not here'. Label C says 'the prize is in A'. Only one of the three statements is true. Which box has the prize?"},
+  {"task_id": "l3", "prompt": "In a race, Maria finished ahead of Tom. Tom finished ahead of Sara. Sara finished ahead of Leo. Who finished last?"},
+  {"task_id": "g1", "prompt": "Write a Python function is_palindrome(s) that returns True if s is a palindrome, ignoring case and spaces."},
+  {"task_id": "g2", "prompt": "Write a Python function fizzbuzz(n) that returns 'Fizz' if n is divisible by 3, 'Buzz' if divisible by 5, 'FizzBuzz' if divisible by both, otherwise the number as a string."},
+  {"task_id": "g3", "prompt": "Write a Python function count_vowels(s) that returns the number of vowels (a, e, i, o, u) in a string, case-insensitive."}
+]

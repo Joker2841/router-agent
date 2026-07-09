@@ -1,0 +1,8 @@
+# Local Gemma inference on CPU. A prebuilt CPU wheel avoids compiling in the image.
+# Version 0.3.8 or newer is required, since that is the first release whose bundled
+# llama.cpp supports the Gemma 3 architecture. Older versions fail to load the model.
+# Install with:
+#   pip install --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu "llama-cpp-python>=0.3.8"
+# All other dependencies (json, urllib, subprocess) are part of the Python standard
+# library, which keeps the image small and startup fast.
+llama-cpp-python>=0.3.8

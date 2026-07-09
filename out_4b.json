@@ -1,0 +1,34 @@
+[
+  {
+    "task_id": "practice-01",
+    "answer": "Canberra. It is near the Murrumbidgee River and the Brindabella Ranges."
+  },
+  {
+    "task_id": "practice-02",
+    "answer": "144.0"
+  },
+  {
+    "task_id": "practice-03",
+    "answer": "Mixed. It expresses both positive (battery life) and negative (screen scratching) aspects."
+  },
+  {
+    "task_id": "practice-04",
+    "answer": "The newly opened downtown library provides free workshops, a makerspace, and extended evening hours to benefit students."
+  },
+  {
+    "task_id": "practice-05",
+    "answer": "Maria Sanchez - Person\nFireworks AI - Organization\nBerlin - Location\nlast March - Date"
+  },
+  {
+    "task_id": "practice-06",
+    "answer": "```python\ndef get_max(nums):\n    \"\"\"\n    Returns the maximum value in a list of numbers.\n    \"\"\"\n    if not nums:\n        return None  # Handle empty list case\n    max_num = nums[0]\n    for num in nums:\n        if num > max_num:\n            max_num = num\n    return max_num\n```"
+  },
+  {
+    "task_id": "practice-07",
+    "answer": "Lee"
+  },
+  {
+    "task_id": "practice-08",
+    "answer": "```python\ndef find_second_largest(numbers):\n    \"\"\"\n    Finds the second largest number in a list, handling duplicates correctly.\n\n    Args:\n        numbers (list): A list of numbers.\n\n    Returns:\n        int or float: The second largest number in the list.\n        Returns None if the list has fewer than 2 unique elements.\n    \"\"\"\n    if not numbers or len(numbers) < 2:\n        return None\n\n    unique_numbers = sorted(list(set(numbers)), reverse=True)\n\n    if len(unique_numbers) < 2:\n        return None\n\n    return unique_numbers[1]\n```"
+  }
+]
