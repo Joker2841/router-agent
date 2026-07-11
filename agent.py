@@ -31,7 +31,7 @@ OUTPUT_PATH = os.environ.get("OUTPUT_PATH", "/output/results.json")
 # Time guard. If local inference falls behind, escalate the rest so we always
 # finish inside the 10 minute limit even if the grading box is slow.
 _START = time.time()
-TIME_BUDGET_S = float(os.environ.get("TIME_BUDGET_S", "480"))
+TIME_BUDGET_S = float(os.environ.get("TIME_BUDGET_S", "330"))
 
 
 def _behind_schedule() -> bool:

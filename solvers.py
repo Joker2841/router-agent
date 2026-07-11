@@ -56,8 +56,8 @@ _LANG_SYS = {
     "sentiment": "Classify the sentiment (positive, negative, neutral, or mixed) and give a one-line justification. Be concise. No markdown.",
     "ner": "Extract every named entity and label its type (Person, Organization, Location, Date). One per line as 'entity - Type'. No preamble, no markdown.",
     "summarization": "Summarize following the exact length/format constraint in the request. Output only the summary, nothing else.",
-    "factual": "Answer accurately and concisely. State only facts you are confident about; do not invent specifics. No markdown.",
-    "general": "Answer accurately and concisely. No markdown.",
+    "factual": "Answer accurately and completely. Address every part of the question, and briefly explain where an explanation is asked for. Keep it focused, no filler. No markdown.",
+    "general": "Answer accurately and completely. Address every part of the question, and briefly explain where an explanation is asked for. Keep it focused, no filler. No markdown.",
 }
 
 

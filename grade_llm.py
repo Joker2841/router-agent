@@ -19,6 +19,8 @@ JUDGE = fw.pick_model("general")
 
 def expected_intent(check: dict) -> str:
     t = check["type"]
+    if t == "expected":
+        return check["expected"]
     if t == "numeric":
         return f"The correct final answer is the number {check['value']}."
     if t == "contains_all":
