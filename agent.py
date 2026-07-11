@@ -1,20 +1,16 @@
-"""Container entrypoint for AMD Hackathon Track 1.
+"""Container entry point for AMD Hackathon Track 1.
 
-Contract: read /input/tasks.json -> write /output/results.json -> exit 0.
+Contract: read /input/tasks.json, write /output/results.json, exit 0.
 
-Pipeline (prove-or-escalate, local-first, zero Fireworks tokens whenever possible):
-  1. classify the task (0 tokens)
-  2. run the matching local handler:
-       - math/logic  -> program-of-thought sampled for self-consistency + executed
-       - code        -> generated locally, compile-checked
-       - language    -> concise local generation
-  3. if the local answer is VERIFIED, ship it (0 tokens).
-  4. otherwise escalate to Fireworks, but only for hard categories, and in
-     moonshot mode only when there is no usable local answer at all.
+Strategy: the judged box is small (4 GB RAM, 2 vCPU, no GPU), so a large local
+model cannot finish 19 tasks in the 10 minute limit. We therefore run a small,
+fast local model for the categories it handles well at zero tokens, and escalate
+the harder categories to a Fireworks model. The set of escalated categories is
+configurable so we can tune the accuracy and token trade-off per build.
 
-MODE (env):
-  moonshot (default) -> escalate only hard tasks with NO verified local answer.
-  hybrid             -> also escalate unverified answers in the escalation set.
+Environment:
+  ESCALATE_CATEGORIES  comma separated categories to send to Fireworks
+  MODE                 "moonshot" forces everything local (for offline testing)
 """
 from __future__ import annotations
 
@@ -28,23 +24,48 @@ import classifier
 import solvers
 from local_llm import get_llm
 
-MODE = os.environ.get("MODE", "moonshot").lower()
+MODE = os.environ.get("MODE", "hybrid").lower()
 INPUT_PATH = os.environ.get("INPUT_PATH", "/input/tasks.json")
 OUTPUT_PATH = os.environ.get("OUTPUT_PATH", "/output/results.json")
 
-HARD = {"math", "logic", "code_generation", "code_debugging"}
-LANG = {"sentiment", "ner", "summarization", "factual", "general"}
-# Categories to escalate when unverified (hybrid mode).
-ESCALATE_UNVERIFIED = set(HARD)
-if os.environ.get("ESCALATE_FACTUAL") == "1":
-    ESCALATE_UNVERIFIED.add("factual")
+# Time guard. If local inference falls behind, escalate the rest so we always
+# finish inside the 10 minute limit even if the grading box is slow.
+_START = time.time()
+TIME_BUDGET_S = float(os.environ.get("TIME_BUDGET_S", "480"))
 
-# Categories to never trust locally (always escalate when Fireworks is
-# available). Empty by default = pure moonshot, 0 tokens. If the real hidden-set
-# score shows a category dragging us down, set e.g.
-# UNTRUSTED_CATEGORIES="logic" and provide a Fireworks key to escalate it.
-_ut = os.environ.get("UNTRUSTED_CATEGORIES", "")
-UNTRUSTED = {c.strip() for c in _ut.split(",") if c.strip()}
+
+def _behind_schedule() -> bool:
+    return (time.time() - _START) > TIME_BUDGET_S
+
+# Categories to escalate to Fireworks. Everything else is answered locally.
+# Default keeps the fast language tasks local and sends the hard ones out.
+_DEFAULT_ESCALATE = "factual,math,logic,code_generation,code_debugging,general"
+ESCALATE_CATEGORIES = {
+    c.strip() for c in os.environ.get("ESCALATE_CATEGORIES", _DEFAULT_ESCALATE).split(",") if c.strip()
+}
+
+# Reasoning level per category. Categories not listed use REASONING_EFFORT (none).
+# Only the genuinely hard categories reason, to keep the token score low.
+# Tunable by env so we can find the cheapest level that stays correct.
+_REASONING_BY_CAT = {
+    "math": os.environ.get("REASONING_MATH", "low"),
+    "logic": os.environ.get("REASONING_LOGIC", "medium"),
+}
+# Output budget per category. Reasoning categories need room to think and answer.
+_MAXTOK_BY_CAT = {
+    "math": 512, "logic": 1024,
+    "code_generation": 512, "code_debugging": 512,
+}
+
+
+def _fireworks_available() -> bool:
+    if MODE == "moonshot":
+        return False
+    try:
+        import fireworks_client as fw
+    except Exception:
+        return False
+    return bool(fw.allowed_models()) and bool(os.environ.get("FIREWORKS_API_KEY"))
 
 
 def run_primary(cat: str, prompt: str, llm):
@@ -62,37 +83,36 @@ def run_primary(cat: str, prompt: str, llm):
 def handle(task: dict, llm) -> tuple[str, str, int]:
     prompt = task.get("prompt", "")
     cat = classifier.classify(prompt)
-    res = run_primary(cat, prompt, llm)
+    fw_ok = _fireworks_available()
 
-    # 1) Verified local answer -> ship it, 0 tokens (unless the category is
-    #    flagged untrusted, where even a "verified" local answer isn't reliable).
-    if res is not None and res.verified and cat not in UNTRUSTED:
-        return res.answer, res.source, 0
-
-    # 2) Decide whether to escalate.
-    want_escalation = False
-    if cat in UNTRUSTED:
-        want_escalation = True
-    elif cat in HARD and (res is None or MODE == "hybrid"):
-        want_escalation = True
-    elif MODE == "hybrid" and cat in ESCALATE_UNVERIFIED:
-        want_escalation = True
-
-    if want_escalation:
+    # Preferred path for hard categories: escalate to Fireworks.
+    if cat in ESCALATE_CATEGORIES and fw_ok:
         esc = _escalate(prompt, cat)
         if esc is not None:
             return esc
 
-    # 3) Local fallback (0 tokens): keep whatever we have, or try a plain answer.
-    if res is None:
-        res = solvers.solve_language(prompt, llm, cat if cat in LANG else "general")
-    if res is None:
-        return "", "empty", 0
-    return res.answer, res.source, res.fw_tokens
+    # Time guard: if we are running low on time, escalate instead of spending it
+    # on slow local inference, so we never blow the 10 minute limit.
+    if fw_ok and _behind_schedule():
+        esc = _escalate(prompt, cat)
+        if esc is not None:
+            return esc
+
+    # Local path (zero tokens).
+    res = run_primary(cat, prompt, llm)
+    if res is not None and res.answer:
+        return res.answer, res.source, res.fw_tokens
+
+    # Local produced nothing usable: escalate as a last resort.
+    if fw_ok:
+        esc = _escalate(prompt, cat)
+        if esc is not None:
+            return esc
+    return "", "empty", 0
 
 
 def _escalate(prompt: str, cat: str):
-    """Call Fireworks with the cheapest sufficient allowed model. Terse."""
+    """Call Fireworks with the cheapest sufficient allowed model, kept terse."""
     try:
         import fireworks_client as fw
     except Exception:
@@ -102,13 +122,28 @@ def _escalate(prompt: str, cat: str):
 
     kind = "code" if cat in ("code_generation", "code_debugging") else "general"
     if os.environ.get("ESCALATE_TO_GEMMA") == "1":
-        kind = "gemma"  # for the "Gemma via Fireworks" prize
+        kind = "gemma"
     model = fw.pick_model(kind)
     if not model:
         return None
+
+    # Per category reasoning and token budget. Simple categories answer directly
+    # with no thinking (cheap). Hard categories reason, and need a big enough
+    # budget that the model finishes thinking AND emits the answer.
+    default_effort = os.environ.get("REASONING_EFFORT", "none") or None
+    effort = _REASONING_BY_CAT.get(cat, default_effort)
+    max_tokens = _MAXTOK_BY_CAT.get(cat, 200)
+
     sys_prompt = "Answer correctly and as briefly as possible. Output only the answer."
     try:
-        text, tokens = fw.chat(prompt, model, system=sys_prompt, max_tokens=600)
+        text, tokens = fw.chat(prompt, model, system=sys_prompt,
+                               max_tokens=max_tokens, reasoning_effort=effort)
+        # A reasoning model can burn the whole budget thinking and return nothing.
+        # If that happens, retry once with no thinking so we still get an answer.
+        if not text and effort not in (None, "none"):
+            text, extra = fw.chat(prompt, model, system=sys_prompt,
+                                   max_tokens=256, reasoning_effort="none")
+            tokens += extra
         return text, f"fireworks:{model}", tokens
     except Exception:
         return None

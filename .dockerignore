@@ -10,6 +10,12 @@ sample_output.json
 eval.py
 eval_set.json
 eval_tasks.json
+harder_eval.json
+harder_tasks.json
+hard_out.json
+test_effort.py
+grade_results.py
+grade_llm.py
 slides.html
 *.md
 .env

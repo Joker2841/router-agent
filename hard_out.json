@@ -1,0 +1,70 @@
+[
+  {
+    "task_id": "hf1",
+    "answer": "Iron, Fe"
+  },
+  {
+    "task_id": "hf2",
+    "answer": "The Berlin Wall fell in 1989. It divided East Berlin and West Berlin."
+  },
+  {
+    "task_id": "hf3",
+    "answer": "Jupiter is the largest planet in our solar system. It is mainly composed of hydrogen and helium."
+  },
+  {
+    "task_id": "hs1",
+    "answer": "Mixed sentiment: The review contains both negative aspects (predictable plot, dragging pacing) and positive aspects (stunning cinematography, chilling score)."
+  },
+  {
+    "task_id": "hs2",
+    "answer": "Negative sentiment. The user expresses frustration with the settings menu."
+  },
+  {
+    "task_id": "hsum1",
+    "answer": "The company achieved a record quarterly revenue of 4.2 billion dollars, a 18% increase year over year, led by cloud services, but faced a 5% decline in hardware sales due to supply issues."
+  },
+  {
+    "task_id": "hsum2",
+    "answer": "Heavy rainfall caused flooding, evacuations, road closures in low-lying neighborhoods."
+  },
+  {
+    "task_id": "hn1",
+    "answer": "Satya Nadella - Person  \nEuropean Commission - Organization  \nBrussels - Location  \nMicrosoft - Organization  \nActivision - Organization"
+  },
+  {
+    "task_id": "hn2",
+    "answer": "Serena Williams - Person\nVogue magazine - Organization\n2022 US Open - Event\nNew York - Location"
+  },
+  {
+    "task_id": "hd1",
+    "answer": "```python\ndef fact(n):\n    result = 1;  # Fixed the initial value of result from 0 to 1\n    for i in range(1, n+1):\n        result *= i;  # Removed the semicolon after result *= i\n    return result\n```"
+  },
+  {
+    "task_id": "hd2",
+    "answer": "```python\ndef count(lst, target):\n    c = 0\n    for x in lst:\n        if x == target:\n            c += 1\n    return c\n```"
+  },
+  {
+    "task_id": "hm1",
+    "answer": "19200.000000000004"
+  },
+  {
+    "task_id": "hm2",
+    "answer": "7.5"
+  },
+  {
+    "task_id": "hl1",
+    "answer": "S"
+  },
+  {
+    "task_id": "hl2",
+    "answer": "Ann drinks coffee."
+  },
+  {
+    "task_id": "hg1",
+    "answer": "def flatten(lst):\n    return [item for sublist in lst for item in sublist]"
+  },
+  {
+    "task_id": "hg2",
+    "answer": "def is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return False\n    return True"
+  }
+]

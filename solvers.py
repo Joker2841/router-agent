@@ -183,11 +183,11 @@ def solve_code_debugging(prompt: str, llm) -> Result | None:
 # (Local output length costs 0 tokens but real wall-clock time; the 10-min /
 # 19-task budget makes this matter, especially for the 4B model.)
 _LANG_MAXTOK = {
-    "sentiment": 110,
-    "ner": 200,
-    "summarization": 170,
-    "factual": 230,
-    "general": 230,
+    "sentiment": 90,
+    "ner": 160,
+    "summarization": 130,
+    "factual": 200,
+    "general": 200,
 }
 
 

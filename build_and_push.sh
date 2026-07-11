@@ -13,7 +13,11 @@ if [[ ! -f models/model.gguf ]]; then
   exit 1
 fi
 
-docker buildx build --platform linux/amd64 -t "$IMAGE" --push .
+# Push a single linux/amd64 image in classic Docker v2 schema2 format.
+# provenance=false drops attestation layers, and oci-mediatypes=false forces
+# Docker media types instead of OCI, which some registry pullers reject.
+docker buildx build --platform linux/amd64 --provenance=false \
+  --output "type=image,name=$IMAGE,oci-mediatypes=false,push=true" .
 
 echo "Pushed $IMAGE"
 echo "Local image size (keep under 10 GB):"

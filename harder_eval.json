@@ -1,0 +1,26 @@
+[
+  {"task_id": "hf1", "category": "factual", "prompt": "Which element has the atomic number 26, and what is its chemical symbol?", "check": {"type": "contains_all", "values": ["iron", "Fe"]}},
+  {"task_id": "hf2", "category": "factual", "prompt": "In what year did the Berlin Wall fall, and which two parts of the city did it divide?", "check": {"type": "contains_all", "values": ["1989", "east", "west"]}},
+  {"task_id": "hf3", "category": "factual", "prompt": "What is the largest planet in our solar system, and what is it mainly composed of?", "check": {"type": "contains_all", "values": ["Jupiter"]}},
+
+  {"task_id": "hs1", "category": "sentiment", "prompt": "Classify the sentiment of this review and briefly justify: 'The plot was predictable and the pacing dragged, but the cinematography was stunning and the score gave me chills.'", "check": {"type": "contains_any", "values": ["mixed", "both"]}},
+  {"task_id": "hs2", "category": "sentiment", "prompt": "Classify the sentiment: 'I guess it works, if you enjoy fighting with the settings menu for an hour every time.'", "check": {"type": "contains_any", "values": ["negative"]}},
+
+  {"task_id": "hsum1", "category": "summarization", "prompt": "Summarize in exactly one sentence: The company reported record quarterly revenue of 4.2 billion dollars, up 18 percent year over year, driven mainly by cloud services, though its hardware division saw a 5 percent decline amid supply constraints.", "check": {"type": "contains_any", "values": ["revenue", "cloud"]}},
+  {"task_id": "hsum2", "category": "summarization", "prompt": "Summarize the following in no more than 10 words: Heavy rainfall over the weekend caused flooding across several low-lying neighborhoods, prompting evacuations and road closures throughout the region.", "check": {"type": "contains_any", "values": ["flood", "rain"]}},
+
+  {"task_id": "hn1", "category": "ner", "prompt": "Extract all named entities and their types: On Monday, Satya Nadella met with the European Commission in Brussels to discuss Microsoft's acquisition of Activision.", "check": {"type": "contains_all", "values": ["Satya Nadella", "European Commission", "Brussels", "Microsoft", "Activision"]}},
+  {"task_id": "hn2", "category": "ner", "prompt": "Extract all named entities and their types: Serena Williams announced her retirement in Vogue magazine ahead of the 2022 US Open in New York.", "check": {"type": "contains_all", "values": ["Serena Williams", "Vogue", "New York"]}},
+
+  {"task_id": "hd1", "category": "code_debugging", "prompt": "This function should return the factorial of n but has a bug: def fact(n): result = 0\\n    for i in range(1, n+1): result *= i\\n    return result. Find and fix it.", "check": {"type": "code_tests", "function_name": "fact", "tests": [{"args": [5], "expected": 120}, {"args": [0], "expected": 1}]}},
+  {"task_id": "hd2", "category": "code_debugging", "prompt": "This should count how many times target appears in a list but returns the wrong result: def count(lst, target): c = 0\\n    for x in lst:\\n        if x == target: c = 1\\n    return c. Find and fix it.", "check": {"type": "code_tests", "function_name": "count", "tests": [{"args": [[1, 2, 2, 3], 2], "expected": 2}, {"args": [[1, 1, 1], 1], "expected": 3}]}},
+
+  {"task_id": "hm1", "category": "math", "prompt": "A car worth 30,000 dollars new depreciates 20 percent of its value each year. What is its value after 2 years?", "check": {"type": "numeric", "value": 19200}},
+  {"task_id": "hm2", "category": "math", "prompt": "A recipe needs 3 eggs for 12 cookies. How many eggs are needed to make 30 cookies?", "check": {"type": "numeric", "value": 7.5}},
+
+  {"task_id": "hl1", "category": "logic", "prompt": "Five runners P, Q, R, S, and T finish a race. Q finished before R but after S. T finished last. P finished before S. Who finished first?", "check": {"type": "contains_any", "values": ["P"]}},
+  {"task_id": "hl2", "category": "logic", "prompt": "Three coworkers each drink a different beverage: coffee, tea, water. Ann does not drink water. The tea drinker sits between Ann and the water drinker. Who drinks coffee?", "check": {"type": "contains_any", "values": ["Ann"]}},
+
+  {"task_id": "hg1", "category": "code_generation", "prompt": "Write a Python function flatten(lst) that flattens a list of lists into a single flat list.", "check": {"type": "code_tests", "function_name": "flatten", "tests": [{"args": [[[1, 2], [3, 4]]], "expected": [1, 2, 3, 4]}, {"args": [[[], [5]]], "expected": [5]}]}},
+  {"task_id": "hg2", "category": "code_generation", "prompt": "Write a Python function is_prime(n) that returns True if n is prime, handling n less than 2 correctly.", "check": {"type": "code_tests", "function_name": "is_prime", "tests": [{"args": [7], "expected": true}, {"args": [1], "expected": false}, {"args": [2], "expected": true}, {"args": [9], "expected": false}]}}
+]

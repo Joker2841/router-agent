@@ -1,0 +1,19 @@
+[
+  {"task_id": "hf1", "prompt": "Which element has the atomic number 26, and what is its chemical symbol?"},
+  {"task_id": "hf2", "prompt": "In what year did the Berlin Wall fall, and which two parts of the city did it divide?"},
+  {"task_id": "hf3", "prompt": "What is the largest planet in our solar system, and what is it mainly composed of?"},
+  {"task_id": "hs1", "prompt": "Classify the sentiment of this review and briefly justify: 'The plot was predictable and the pacing dragged, but the cinematography was stunning and the score gave me chills.'"},
+  {"task_id": "hs2", "prompt": "Classify the sentiment: 'I guess it works, if you enjoy fighting with the settings menu for an hour every time.'"},
+  {"task_id": "hsum1", "prompt": "Summarize in exactly one sentence: The company reported record quarterly revenue of 4.2 billion dollars, up 18 percent year over year, driven mainly by cloud services, though its hardware division saw a 5 percent decline amid supply constraints."},
+  {"task_id": "hsum2", "prompt": "Summarize the following in no more than 10 words: Heavy rainfall over the weekend caused flooding across several low-lying neighborhoods, prompting evacuations and road closures throughout the region."},
+  {"task_id": "hn1", "prompt": "Extract all named entities and their types: On Monday, Satya Nadella met with the European Commission in Brussels to discuss Microsoft's acquisition of Activision."},
+  {"task_id": "hn2", "prompt": "Extract all named entities and their types: Serena Williams announced her retirement in Vogue magazine ahead of the 2022 US Open in New York."},
+  {"task_id": "hd1", "prompt": "This function should return the factorial of n but has a bug: def fact(n): result = 0; for i in range(1, n+1): result *= i; return result. Find and fix it."},
+  {"task_id": "hd2", "prompt": "This should count how many times target appears in a list but returns the wrong result: def count(lst, target): c = 0; for x in lst: if x == target: c = 1; return c. Find and fix it."},
+  {"task_id": "hm1", "prompt": "A car worth 30,000 dollars new depreciates 20 percent of its value each year. What is its value after 2 years?"},
+  {"task_id": "hm2", "prompt": "A recipe needs 3 eggs for 12 cookies. How many eggs are needed to make 30 cookies?"},
+  {"task_id": "hl1", "prompt": "Five runners P, Q, R, S, and T finish a race. Q finished before R but after S. T finished last. P finished before S. Who finished first?"},
+  {"task_id": "hl2", "prompt": "Three coworkers each drink a different beverage: coffee, tea, water. Ann does not drink water. The tea drinker sits between Ann and the water drinker. Who drinks coffee?"},
+  {"task_id": "hg1", "prompt": "Write a Python function flatten(lst) that flattens a list of lists into a single flat list."},
+  {"task_id": "hg2", "prompt": "Write a Python function is_prime(n) that returns True if n is prime, handling n less than 2 correctly."}
+]

@@ -16,7 +16,10 @@ class LocalLLM:
     def __init__(self, model_path: str | None = None, n_ctx: int = 4096, n_threads: int | None = None):
         self.model_path = model_path or os.environ.get("LOCAL_MODEL_PATH", "models/model.gguf")
         self.n_ctx = int(os.environ.get("LOCAL_N_CTX", n_ctx))
-        self.n_threads = n_threads or int(os.environ.get("LOCAL_N_THREADS", os.cpu_count() or 2))
+        # Cap threads low. Inside a Docker CPU quota, os.cpu_count() reports the
+        # host's core count, so using it oversubscribes and stalls llama.cpp.
+        # The grading box has 2 vCPUs, so 2 threads is the right default.
+        self.n_threads = n_threads or int(os.environ.get("LOCAL_N_THREADS", "2"))
         self._llm = None
         self._load_error = None
 

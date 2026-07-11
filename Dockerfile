@@ -19,11 +19,15 @@ COPY code_exec.py classifier.py local_llm.py solvers.py fireworks_client.py agen
 COPY models/model.gguf ./models/model.gguf
 
 # Defaults (harness overrides FIREWORKS_* and ALLOWED_MODELS at runtime).
-# n_ctx kept small on purpose: tasks are short, and a smaller KV cache keeps us
-# comfortably inside the 4 GB grading box (avoids OOM with the 4B model).
-ENV MODE=moonshot \
+# The judged box has only 2 vCPUs, so we bundle the fast 1B model and escalate
+# the hard categories to Fireworks. n_ctx is small since tasks are short.
+ENV MODE=hybrid \
+    ESCALATE_CATEGORIES=factual,sentiment,ner,summarization,code_debugging,math,logic,code_generation,general \
+    REASONING_EFFORT=none \
+    POT_SAMPLES=3 \
     LOCAL_MODEL_PATH=/app/models/model.gguf \
     LOCAL_N_CTX=2048 \
+    LOCAL_N_THREADS=2 \
     PYTHONUNBUFFERED=1
 
 CMD ["python3", "agent.py"]
