@@ -77,6 +77,8 @@ def run_primary(cat: str, prompt: str, llm):
         return solvers.solve_code_generation(prompt, llm)
     if cat == "code_debugging":
         return solvers.solve_code_debugging(prompt, llm)
+    if cat == "summarization":
+        return solvers.solve_summarization(prompt, llm)
     return solvers.solve_language(prompt, llm, cat)
 
 

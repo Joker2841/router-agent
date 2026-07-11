@@ -56,8 +56,8 @@ _LANG_SYS = {
     "sentiment": "Classify the sentiment (positive, negative, neutral, or mixed) and give a one-line justification. Be concise. No markdown.",
     "ner": "Extract every named entity and label its type (Person, Organization, Location, Date). One per line as 'entity - Type'. No preamble, no markdown.",
     "summarization": "Summarize following the exact length/format constraint in the request. Output only the summary, nothing else.",
-    "factual": "Answer accurately and completely. Address every part of the question, and briefly explain where an explanation is asked for. Keep it focused, no filler. No markdown.",
-    "general": "Answer accurately and completely. Address every part of the question, and briefly explain where an explanation is asked for. Keep it focused, no filler. No markdown.",
+    "factual": "Answer accurately and completely in about 3 to 5 sentences. Address every part of the question and briefly explain, but do not write an essay. No filler, no markdown.",
+    "general": "Answer accurately and completely in about 3 to 5 sentences. Address every part of the question and briefly explain, but do not write an essay. No filler, no markdown.",
 }
 
 
@@ -189,6 +189,56 @@ _LANG_MAXTOK = {
     "factual": 200,
     "general": 200,
 }
+
+
+_NUMWORD = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6}
+
+
+def _parse_num(s: str):
+    s = s.strip().lower()
+    if s in _NUMWORD:
+        return _NUMWORD[s]
+    return int(s) if s.isdigit() else None
+
+
+def _enforce_summary_format(prompt: str, text: str) -> str:
+    """Deterministically force the summary to match the prompt's format rule:
+    exact bullet count with per-bullet word limit, exact sentence count, or a
+    total word cap. Content comes from the model; this only fixes the shape."""
+    p = prompt.lower()
+    text = text.strip()
+    mb = re.search(r"(one|two|three|four|five|six|\d+)\s+bullet", p)
+    ms = re.search(r"(?:exactly\s+)?(one|two|three|four|five|six|\d+)\s+sentence", p)
+    mw = re.search(r"(?:under|no longer than|no more than|less than|at most|within)\s+(\d+)\s+words?", p)
+
+    if mb:
+        n = _parse_num(mb.group(1))
+        wlim = int(mw.group(1)) if mw else None
+        lines = [re.sub(r"^[\-\*•\d\.\)\s]+", "", ln).strip()
+                 for ln in text.splitlines() if ln.strip()]
+        if n and len(lines) < n:  # not enough bullets: split by sentence
+            lines = [s.strip() for s in re.split(r"(?<=[.!?])\s+", " ".join(lines)) if s.strip()]
+        lines = [ln for ln in lines if ln][:n] if n else lines
+        if wlim:
+            lines = [" ".join(ln.split()[:wlim]).rstrip(".,;:") for ln in lines]
+        return "\n".join("- " + ln for ln in lines) if lines else text
+
+    if ms:
+        n = _parse_num(ms.group(1))
+        sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+        return " ".join(sents[:n]) if n else text
+
+    if mw:
+        return " ".join(text.split()[:int(mw.group(1))])
+    return text
+
+
+def solve_summarization(prompt: str, llm) -> Result | None:
+    gen = _clean(llm.generate(prompt, max_tokens=300, temperature=0.0,
+                              system=_LANG_SYS["summarization"]))
+    if not gen:
+        return None
+    return Result(answer=_enforce_summary_format(prompt, gen), source="local-llm", verified=False)
 
 
 def solve_language(prompt: str, llm, category: str) -> Result | None:

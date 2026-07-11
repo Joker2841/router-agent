@@ -50,13 +50,13 @@ SYS = {
 # Step 1 instructions: produce ONLY a JSON array of task-prompt strings, in the
 # exact shape a user would send. No answers here.
 PROMPT_INSTRUCT = {
-    "general": "Write {n} diverse factual questions (science, history, geography, culture, sports, tech). Some may ask two things at once.",
-    "sentiment": "Write {n} diverse 'Classify the sentiment: <review>' tasks with varied tone (positive, negative, neutral, mixed, sarcastic).",
-    "ner": "Write {n} diverse tasks of the form 'Extract all named entities and their types: <sentence>' with entity-rich sentences (people, orgs, locations, dates).",
-    "summarization": "Write {n} diverse tasks of the form 'Summarize in one sentence: <passage>' or 'Summarize in under 12 words: <passage>', each with a real 3-5 sentence passage.",
+    "general": "Write {n} diverse EXPLANATORY factual questions like 'Explain the difference between X and Y and how each works', 'What is X and why does it matter', 'How does X work'. Cover science, computing, biology, physics, technology. Each should require a short but complete explanation, and some should ask two related things at once.",
+    "sentiment": "Write {n} diverse sentiment tasks of the form 'Classify the sentiment of this review as Positive, Negative, or Neutral and give a one-sentence reason: <review>'. Make many reviews MIXED (a clear negative aspect AND a clear positive aspect, e.g. late delivery but great product).",
+    "ner": "Write {n} diverse tasks of the form 'Extract all named entities and label each as PERSON, ORGANIZATION, LOCATION, or DATE: <sentence>' with entity-rich sentences (people, orgs, locations, dates).",
+    "summarization": "Write {n} diverse summarization tasks with STRICT format constraints, varying between: 'Summarize in exactly two sentences: <passage>', 'Summarize in exactly three bullet points, each no longer than 15 words: <passage>', 'Summarize in one sentence: <passage>', 'Summarize in under 12 words: <passage>'. Each passage is 3-5 real sentences with a couple of contrasting ideas.",
     "code_debugging": "Write {n} diverse tasks of the form 'This function has a bug: <one-line python def>. Find and fix it.' Put a realistic bug in the function. Keep each function on one line using semicolons.",
     "code_generation": "Write {n} diverse 'Write a Python function ...' specs (string, list, math, simple algorithms). Describe the function name and behavior clearly.",
-    "math": "Write {n} diverse math word problems (percentages, rates, multi-step arithmetic, unit conversion) each with a single correct numeric answer.",
+    "math": "Write {n} diverse multi-step math word problems (percentages of changing totals, rates, unit conversion, projections). Include some that ask for TWO answers, e.g. a quantity and its total cost.",
     "logic": "Write {n} diverse constraint/deduction puzzles (ordering, assignment, truth-teller) each with a single correct short answer.",
 }
 
@@ -89,7 +89,7 @@ def gen_prompts(cat: str, n: int) -> list[str]:
 def answer(cat: str, prompt: str) -> str | None:
     """Answer using the agent's real system prompt, so format matches inference."""
     effort = "low" if cat in ("math", "logic") else "none"
-    mt = 512 if cat in ("math", "code_generation", "code_debugging", "logic") else 256
+    mt = 512 if cat in ("math", "code_generation", "code_debugging", "logic") else 384
     model = CODE_GEN if cat in ("code_generation", "code_debugging") else GEN
     try:
         text, _ = fw.chat(prompt, model, system=SYS[cat], max_tokens=mt, reasoning_effort=effort)
