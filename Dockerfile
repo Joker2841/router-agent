@@ -22,7 +22,9 @@ COPY models/model.gguf ./models/model.gguf
 # The judged box has only 2 vCPUs, so we bundle the fast 1B model and escalate
 # the hard categories to Fireworks. n_ctx is small since tasks are short.
 ENV MODE=hybrid \
-    ESCALATE_CATEGORIES=math,sentiment,logic \
+    ESCALATE_CATEGORIES=none \
+    VERIFY_ESCALATE_CATEGORIES=none \
+    TIME_BUDGET_S=500 \
     REASONING_EFFORT=none \
     POT_SAMPLES=3 \
     LOCAL_MODEL_PATH=/app/models/model.gguf \

@@ -44,6 +44,13 @@ ESCALATE_CATEGORIES = {
     c.strip() for c in os.environ.get("ESCALATE_CATEGORIES", _DEFAULT_ESCALATE).split(",") if c.strip()
 }
 
+# Verify-then-escalate: run locally, keep the answer only if it is verified
+# (math self-consistency, code compiles/runs); escalate just the unverified ones.
+# This routes per task by the model's actual strength, not by whole category.
+VERIFY_ESCALATE = {
+    c.strip() for c in os.environ.get("VERIFY_ESCALATE_CATEGORIES", "").split(",") if c.strip()
+}
+
 # Reasoning level per category. Categories not listed use REASONING_EFFORT (none).
 # Only the genuinely hard categories reason, to keep the token score low.
 # Tunable by env so we can find the cheapest level that stays correct.
@@ -102,6 +109,14 @@ def handle(task: dict, llm) -> tuple[str, str, int]:
 
     # Local path (zero tokens).
     res = run_primary(cat, prompt, llm)
+
+    # Verify-then-escalate: for verifiable categories, keep the local answer only
+    # if it is verified; otherwise escalate just this one task.
+    if (res is not None and cat in VERIFY_ESCALATE and not res.verified and fw_ok):
+        esc = _escalate(prompt, cat)
+        if esc is not None:
+            return esc
+
     if res is not None and res.answer:
         return res.answer, res.source, res.fw_tokens
 

@@ -139,13 +139,40 @@ def _final_answer(text: str) -> str:
     return lines[-1] if lines else t
 
 
+def _nums(s: str):
+    return re.findall(r"-?\d+(?:\.\d+)?", (s or "").replace(",", ""))
+
+
+def _num_eq(a, b) -> bool:
+    try:
+        return abs(float(a) - float(b)) < 1e-6
+    except (ValueError, TypeError):
+        return False
+
+
 def solve_math(prompt: str, llm) -> Result | None:
-    answer, agree = _pot_consensus(prompt, llm, _MATH_SYS)
-    if answer is not None:
-        return Result(answer=answer, source="local-pot", verified=(agree >= _majority_need()))
-    # PoT produced nothing usable -> direct answer (unverified, may escalate).
-    direct = _clean(llm.generate(prompt, max_tokens=256, temperature=0.0, system=_MATH_DIRECT))
-    return Result(answer=_final_answer(direct), source="local-llm", verified=False) if direct else None
+    """Cross-verify: solve via program-of-thought AND direct reasoning. Trust the
+    local answer (verified) only when the two independent methods agree. Two
+    different methods rarely repeat the same systematic error, so a disagreement
+    is a reliable 'escalate this one' signal."""
+    # Method 1: program-of-thought (write a program, execute it)
+    gen = llm.generate(prompt, max_tokens=320, temperature=0.0, system=_MATH_SYS)
+    pot = None
+    if gen:
+        ok, out = code_exec.run_program(gen, timeout=10)
+        if ok and out and len(out) < 200 and not _is_bad_output(out):
+            pot = out.strip()
+
+    # Method 2: direct step-by-step reasoning
+    direct_txt = _clean(llm.generate(prompt, max_tokens=256, temperature=0.0, system=_MATH_DIRECT))
+
+    if pot is not None:
+        pn, dn = _nums(pot), _nums(direct_txt)
+        agree = bool(pn) and bool(dn) and _num_eq(pn[-1], dn[-1])
+        return Result(answer=pot, source="local-pot", verified=agree)
+    if direct_txt:
+        return Result(answer=_final_answer(direct_txt), source="local-llm", verified=False)
+    return None
 
 
 def solve_logic(prompt: str, llm) -> Result | None:
