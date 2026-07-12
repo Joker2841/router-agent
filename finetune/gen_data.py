@@ -32,8 +32,12 @@ os.environ.setdefault(
     "ALLOWED_MODELS",
     "accounts/fireworks/models/minimax-m3,accounts/fireworks/models/kimi-k2p7-code",
 )
-GEN = fw.pick_model("general")       # MiniMax: best generalist
-CODE_GEN = fw.pick_model("code")     # Kimi: best coder
+# Data generation is offline and unrestricted, so use the strongest models
+# available, not the hackathon's allowed set. Override via env:
+#   GEN_MODEL  = strong generalist (factual/sentiment/summarization/ner)
+#   CODE_MODEL = strong coder (code/math/logic enumeration)
+GEN = os.environ.get("GEN_MODEL") or fw.pick_model("general")
+CODE_GEN = os.environ.get("CODE_MODEL") or fw.pick_model("code")
 
 # System prompt used at inference for each classifier category (must match agent).
 SYS = {
@@ -44,7 +48,7 @@ SYS = {
     "code_debugging": solvers._CODEDEBUG_SYS,
     "code_generation": solvers._CODEGEN_SYS,
     "math": solvers._MATH_SYS,          # program-of-thought
-    "logic": solvers._LOGIC_REASON,
+    "logic": solvers._LOGIC_POT,        # brute-force enumeration code
 }
 
 # Step 1 instructions: produce ONLY a JSON array of task-prompt strings, in the
@@ -90,7 +94,8 @@ def answer(cat: str, prompt: str) -> str | None:
     """Answer using the agent's real system prompt, so format matches inference."""
     effort = "low" if cat in ("math", "logic") else "none"
     mt = 512 if cat in ("math", "code_generation", "code_debugging", "logic") else 384
-    model = CODE_GEN if cat in ("code_generation", "code_debugging") else GEN
+    # Code, math (PoT), and logic (enumeration) are all code -> use the code model.
+    model = CODE_GEN if cat in ("code_generation", "code_debugging", "math", "logic") else GEN
     try:
         text, _ = fw.chat(prompt, model, system=SYS[cat], max_tokens=mt, reasoning_effort=effort)
     except Exception:
@@ -110,12 +115,22 @@ def answer(cat: str, prompt: str) -> str | None:
         ok, out = code_exec.run_program(text, timeout=8)
         if not ok or not re.search(r"-?\d", out):
             return None
+    elif cat == "logic":
+        # Enumeration program: must run and print a clean short answer.
+        ok, out = code_exec.run_program(text, timeout=8)
+        out = (out or "").strip()
+        if not ok or not out or out.startswith("<") or len(out) > 200:
+            return None
     return text
 
 
-def generate_category(cat: str, target: int) -> list[dict]:
-    out, seen, rounds = [], set(), 0
-    while len(out) < target and rounds < target // 10 + 10:
+def generate_category(cat: str, target: int, fh) -> int:
+    """Generate examples for one category, writing each to fh as it is produced
+    so a Ctrl-C never loses progress. Returns the count written."""
+    seen, count, rounds = set(), 0, 0
+    # Hard categories (verified code) have low yield, so allow many more rounds.
+    max_rounds = target // 4 + 40 if cat in ("logic", "math") else target // 10 + 10
+    while count < target and rounds < max_rounds:
         rounds += 1
         for p in gen_prompts(cat, 12):
             if p in seen:
@@ -123,21 +138,27 @@ def generate_category(cat: str, target: int) -> list[dict]:
             seen.add(p)
             a = answer(cat, p)
             if a:
-                out.append({"system": SYS[cat], "user": p, "assistant": a, "category": cat})
-            if len(out) >= target:
+                fh.write(json.dumps(
+                    {"system": SYS[cat], "user": p, "assistant": a, "category": cat},
+                    ensure_ascii=False) + "\n")
+                fh.flush()
+                count += 1
+            if count >= target:
                 break
-        print(f"  {cat}: {len(out)}/{target}", file=sys.stderr)
+        print(f"  {cat}: {count}/{target}", file=sys.stderr)
         time.sleep(0.2)
-    return out[:target]
+    return count
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--per-category", type=int, default=150)
+    ap.add_argument("--category", default=None, help="generate only this category")
     ap.add_argument("--out", default=str(Path(__file__).resolve().parent / "train.jsonl"))
     args = ap.parse_args()
     rows = []
-    for cat in SYS:
+    cats = [args.category] if args.category else list(SYS)
+    for cat in cats:
         print(f"== {cat} ==", file=sys.stderr)
         rows.extend(generate_category(cat, args.per_category))
     with open(args.out, "w", encoding="utf-8") as f:

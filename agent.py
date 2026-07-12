@@ -86,6 +86,8 @@ def run_primary(cat: str, prompt: str, llm):
         return solvers.solve_code_debugging(prompt, llm)
     if cat == "summarization":
         return solvers.solve_summarization(prompt, llm)
+    if cat == "ner":
+        return solvers.solve_ner(prompt, llm)
     return solvers.solve_language(prompt, llm, cat)
 
 

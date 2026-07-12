@@ -9,6 +9,7 @@ runaway generation can never hang the 10-minute container budget.
 """
 from __future__ import annotations
 
+import ast
 import re
 import subprocess
 import sys
@@ -39,6 +40,32 @@ def extract_code(text: str) -> str:
         return ""
     m = _CODE_BLOCK_RE.search(text)
     return (m.group(1) if m else text).strip()
+
+
+def _ensure_last_print(code: str) -> str:
+    """If the program's last top-level statement is a bare expression (REPL style),
+    wrap it in print() so its value reaches stdout. Small models often end a
+    program with a bare expression, expecting notebook-style auto-display; run as
+    a script that prints nothing. Leaves existing print()/docstrings untouched."""
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return code
+    if not tree.body or not isinstance(tree.body[-1], ast.Expr):
+        return code
+    val = tree.body[-1].value
+    if isinstance(val, ast.Call) and isinstance(val.func, ast.Name) and val.func.id == "print":
+        return code
+    if isinstance(val, ast.Constant) and isinstance(val.value, str):
+        return code
+    new = ast.Expr(ast.Call(func=ast.Name(id="print", ctx=ast.Load()), args=[val], keywords=[]))
+    ast.copy_location(new, tree.body[-1])
+    tree.body[-1] = new
+    ast.fix_missing_locations(tree)
+    try:
+        return ast.unparse(tree)
+    except Exception:
+        return code
 
 
 def _run(script: str, timeout: float = 12.0) -> tuple[bool, str]:
@@ -78,6 +105,7 @@ def run_program(code: str, timeout: float = 12.0) -> tuple[bool, str]:
     code = extract_code(code)
     if not code:
         return False, "NO_CODE"
+    code = _ensure_last_print(code)
     return _run(code, timeout=timeout)
 
 

@@ -31,8 +31,12 @@ class Result:
 
 _MATH_SYS = (
     "You are a precise math solver. Write a short, self-contained Python 3 program "
-    "that computes the answer and prints ONLY the final answer with print(), which is "
-    "the number, no words, no units, no explanation. Wrap it in ```python fences."
+    "that computes the answer and prints it with print(). Read every number exactly: "
+    "a count like '640 units' means 640, not a percentage. If the question asks for "
+    "more than one quantity, print EVERY requested quantity on its own line with a "
+    "short label, e.g. print('sugar cups:', x); print('total cost:', y). If it asks "
+    "for a single value, print just that number. No explanation. Wrap it in "
+    "```python fences."
 )
 
 _LOGIC_SYS = (
@@ -70,6 +74,8 @@ def _is_bad_output(s: str) -> bool:
     Python object repr like '<generator object solve at 0x...>')."""
     s = (s or "").strip()
     if not s:
+        return True
+    if s.lower() in ("none", "null", "[]", "()", "{}", "no solution", "nan"):
         return True
     if s.startswith("<") and s.endswith(">"):
         return True
@@ -175,11 +181,37 @@ def solve_math(prompt: str, llm) -> Result | None:
     return None
 
 
+_LOGIC_POT = (
+    "You solve logic and deduction puzzles by exhaustive search. Write a self-contained "
+    "Python 3 program that:\n"
+    "1) Enumerates every possibility with itertools (permutations of items to positions, "
+    "or itertools.product over attribute choices).\n"
+    "2) Keeps only assignments that satisfy EVERY clue. Translate each clue carefully: "
+    "'A before B' means pos[A] < pos[B]; 'immediately right of' means pos differs by "
+    "exactly 1; 'not last' means pos != the maximum; 'taller than' defines an ordering.\n"
+    "3) Reads what the question actually asks (e.g. who is SHORTEST vs tallest, which "
+    "house NUMBER) and prints ONLY that: a single name, number, or the ordering asked "
+    "for. Use print(). No explanation. Wrap it in ```python fences."
+)
+
+
 def solve_logic(prompt: str, llm) -> Result | None:
-    gen = _clean(llm.generate(prompt, max_tokens=350, temperature=0.0, system=_LOGIC_REASON))
-    if not gen:
-        return None
-    return Result(answer=_final_answer(gen), source="local-llm", verified=False)
+    """Logic as code: the model writes brute-force enumeration, we execute it, and
+    self-consistency across samples gives a verified/escalate signal (like math)."""
+    answer, agree = _pot_consensus(prompt, llm, _LOGIC_POT, timeout=10)
+    # Trust the enumeration only when a majority of samples agree on a real answer.
+    if (answer is not None and not _is_bad_output(answer)
+            and agree >= _majority_need()):
+        return Result(answer=answer, source="local-pot", verified=True)
+    # Otherwise fall back to prose reasoning, which is more reliable on this model
+    # for puzzles where the model writes buggy constraint code.
+    direct = _clean(llm.generate(prompt, max_tokens=300, temperature=0.0, system=_LOGIC_REASON))
+    if direct:
+        return Result(answer=_final_answer(direct), source="local-llm", verified=False)
+    # Last resort: whatever the enumeration produced, if anything.
+    if answer is not None and not _is_bad_output(answer):
+        return Result(answer=answer, source="local-pot", verified=False)
+    return None
 
 
 def solve_code_generation(prompt: str, llm) -> Result | None:
@@ -266,6 +298,45 @@ def solve_summarization(prompt: str, llm) -> Result | None:
     if not gen:
         return None
     return Result(answer=_enforce_summary_format(prompt, gen), source="local-llm", verified=False)
+
+
+_SPACY = None
+_SPACY_MAP = {"PERSON": "Person", "ORG": "Organization", "GPE": "Location",
+              "LOC": "Location", "FAC": "Location", "NORP": "Organization",
+              "DATE": "Date", "TIME": "Date"}
+
+
+def _get_spacy():
+    global _SPACY
+    if _SPACY is None:
+        try:
+            import spacy
+            _SPACY = spacy.load("en_core_web_md")
+        except Exception:
+            _SPACY = False
+    return _SPACY or None
+
+
+def solve_ner(prompt: str, llm) -> Result | None:
+    """Deterministic NER via spaCy (reliable, zero tokens). Falls back to the
+    local model if spaCy is unavailable or finds nothing."""
+    nlp = _get_spacy()
+    if nlp is not None:
+        text = prompt.rsplit(":", 1)[-1].strip() if ":" in prompt else prompt
+        try:
+            doc = nlp(text or prompt)
+            pairs, seen = [], set()
+            for ent in doc.ents:
+                t = _SPACY_MAP.get(ent.label_)
+                name = ent.text.strip()
+                if t and name and (name, t) not in seen:
+                    seen.add((name, t))
+                    pairs.append(f"{name} - {t}")
+            if pairs:
+                return Result(answer="\n".join(pairs), source="local-spacy", verified=True)
+        except Exception:
+            pass
+    return solve_language(prompt, llm, "ner")
 
 
 def solve_language(prompt: str, llm, category: str) -> Result | None:
